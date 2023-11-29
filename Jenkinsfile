@@ -1,9 +1,10 @@
 pipeline {
 
   environment {
-    dockerimagename = "sample-frontend:v1"
-    dockerimagename = "sample-backend:v1"
+    frontendDockerImageName = "sample-frontend:v1"
+    backendDockerImageName = "sample-backend:v1"
     dockerImage = ""
+    registryCredential = 'dockerhublogin'
   }
 
   agent any
@@ -16,22 +17,37 @@ pipeline {
       }
     }
 
-    stage('Build image') {
-      steps{
+    stage('Build Frontend Image') {
+      steps {
         script {
-          dockerImage = docker.build dockerimagename 
+          dockerImage = docker.build frontendDockerImageName
         }
       }
     }
 
-    stage('Pushing Image') {
-      environment {
-               registryCredential = 'dockerhublogin'
-           }
-      steps{
+    stage('Push Frontend Image') {
+      steps {
         script {
-          docker.withRegistry( 'https://registry.hub.docker.com', registryCredential ) {
-            dockerImage.push("v1")
+          docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
+            dockerImage.push("${frontendDockerImageName}")
+          }
+        }
+      }
+    }
+
+    stage('Build Backend Image') {
+      steps {
+        script {
+          dockerImage = docker.build backendDockerImageName
+        }
+      }
+    }
+
+    stage('Push Backend Image') {
+      steps {
+        script {
+          docker.withRegistry('https://registry.hub.docker.com', registryCredential) {
+            dockerImage.push("${backendDockerImageName}")
           }
         }
       }
